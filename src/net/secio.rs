@@ -160,7 +160,7 @@ impl<T: Read + Write> SecureStream<T> {
             remote_params: remote_params,
         };
 
-        try!(secure_stream.write_exact(&propose_in.get_rand()));
+        try!(secure_stream.write_all(&propose_in.get_rand()));
 
         let rand_in = try!(secure_stream.read_message());
 
@@ -171,16 +171,6 @@ impl<T: Read + Write> SecureStream<T> {
 
         println!("Secure handshake complete.");
         Ok(secure_stream)
-    }
-
-    fn write_exact(&mut self, data: &[u8]) -> Result<(), Error> {
-        let mut enc = self.local_params.cipher.update(data);
-        let hmac = self.cipher_suite
-                       .hash_alg()
-                       .hmac(self.local_params.stretched_key.hmac_key(),
-                             &enc[..]);
-        enc.extend(hmac);
-        write_length_prefixed(&mut self.stream, &enc[..])
     }
 
     fn read_message(&mut self) -> Result<Vec<u8>, Error> {
@@ -210,6 +200,27 @@ impl<T: Read + Write> SecureStream<T> {
     /// Returns this stream's negotiated `CipherSuite`.
     pub fn cipher_suite(&self) -> suite::CipherSuite {
         self.cipher_suite
+    }
+}
+
+impl<T: Write> Write for SecureStream<T> {
+    fn write(&mut self, buf: &[u8]) -> Result<usize, Error> {
+        try!(self.write_all(buf));
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> Result<(), Error> {
+        self.stream.flush()
+    }
+
+    fn write_all(&mut self, buf: &[u8]) -> Result<(), Error> {
+        let mut enc = self.local_params.cipher.update(buf);
+        let hmac = self.cipher_suite
+                       .hash_alg()
+                       .hmac(self.local_params.stretched_key.hmac_key(),
+                             &enc[..]);
+        enc.extend(hmac);
+        write_length_prefixed(&mut self.stream, &enc[..])
     }
 }
 

@@ -8,6 +8,7 @@ extern crate openssl;
 extern crate protobuf;
 extern crate byteorder;
 extern crate rand;
+extern crate multiaddr;
 
 pub mod crypto;
 pub mod net;

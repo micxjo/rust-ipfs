@@ -4,6 +4,7 @@ use std::{io, u32};
 use std::cmp::min;
 use std::io::{Read, Write, Error, ErrorKind};
 use std::collections::VecDeque;
+use std::net::TcpStream;
 
 use rand;
 use rand::Rng;
@@ -15,6 +16,7 @@ use proto::{Propose, Exchange};
 use crypto::{hash, suite, public_key, symm};
 use crypto::public_key::PublicKey;
 use crypto::ecc::EphemeralKeyPair;
+use net::multiaddr::{Multiaddr, Addr};
 
 /// A secure stream.
 pub struct SecureStream<T> {
@@ -23,6 +25,25 @@ pub struct SecureStream<T> {
     local_params: EncryptionParams,
     remote_params: EncryptionParams,
     read_buf: VecDeque<u8>,
+}
+
+impl SecureStream<TcpStream> {
+    /// Attempts to connect to a given `Multiaddr` via secio. Currently
+    /// only supports IPv4/TCP multiaddrs.
+    pub fn dial(addr: &Multiaddr,
+                pub_key: PublicKey)
+                -> io::Result<SecureStream<TcpStream>> {
+        let parts = addr.parts();
+
+        if let Some(&Addr::Ipv4(ip4)) = parts.get(0) {
+            if let Some(&Addr::Tcp(port)) = parts.get(1) {
+                let tcp_stream = try!(TcpStream::connect((ip4, port)));
+                return SecureStream::new(tcp_stream, pub_key);
+            }
+        }
+
+        Err(Error::new(ErrorKind::Other, "only support IPv4/TCP for now"))
+    }
 }
 
 impl<T: Read + Write> SecureStream<T> {

@@ -12,5 +12,9 @@ keywords = ["networking", "protocol", "web"]
 [dependencies]
 clippy = { version = "*", optional = true }
 
+[dependencies.openssl]
+version = "^0.7.6"
+features = ["aes_ctr"]
+
 [features]
 default = []

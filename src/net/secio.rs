@@ -1,7 +1,9 @@
 //! A secure network stream.
 
 use std::{io, u32};
+use std::cmp::min;
 use std::io::{Read, Write, Error, ErrorKind};
+use std::collections::VecDeque;
 
 use rand;
 use rand::Rng;
@@ -20,6 +22,7 @@ pub struct SecureStream<T> {
     cipher_suite: suite::CipherSuite,
     local_params: EncryptionParams,
     remote_params: EncryptionParams,
+    read_buf: VecDeque<u8>,
 }
 
 impl<T: Read + Write> SecureStream<T> {
@@ -158,6 +161,7 @@ impl<T: Read + Write> SecureStream<T> {
             cipher_suite: suite,
             local_params: local_params,
             remote_params: remote_params,
+            read_buf: VecDeque::new(),
         };
 
         try!(secure_stream.write_all(&propose_in.get_rand()));
@@ -173,6 +177,14 @@ impl<T: Read + Write> SecureStream<T> {
         Ok(secure_stream)
     }
 
+
+    /// Returns this stream's negotiated `CipherSuite`.
+    pub fn cipher_suite(&self) -> suite::CipherSuite {
+        self.cipher_suite
+    }
+}
+
+impl<T: Read> SecureStream<T> {
     fn read_message(&mut self) -> Result<Vec<u8>, Error> {
         let msg = try!(read_length_prefixed(&mut self.stream));
         let hmac_length = self.cipher_suite.hmac_length();
@@ -196,11 +208,6 @@ impl<T: Read + Write> SecureStream<T> {
         }
         Ok(self.remote_params.cipher.update(&data[..]))
     }
-
-    /// Returns this stream's negotiated `CipherSuite`.
-    pub fn cipher_suite(&self) -> suite::CipherSuite {
-        self.cipher_suite
-    }
 }
 
 impl<T: Write> Write for SecureStream<T> {
@@ -221,6 +228,28 @@ impl<T: Write> Write for SecureStream<T> {
                              &enc[..]);
         enc.extend(hmac);
         write_length_prefixed(&mut self.stream, &enc[..])
+    }
+}
+
+impl<T: Read> Read for SecureStream<T> {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, Error> {
+        let mut count = 0;
+        while count < min(buf.len(), self.read_buf.len()) {
+            buf[count] = self.read_buf.pop_front().unwrap();
+            count += 1;
+        }
+
+        if count < buf.len() {
+            let packet = try!(self.read_message());
+            let diff = min(buf.len() - count, packet.len());
+            for byte in packet.iter().take(diff) {
+                buf[count] = *byte;
+                count += 1;
+            }
+            self.read_buf.extend(packet[diff..].into_iter());
+        }
+
+        Ok(count)
     }
 }
 

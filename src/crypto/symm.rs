@@ -28,6 +28,15 @@ impl CipherType {
         }
     }
 
+    /// Gets the `CipherType` for a given IPFS cipher name.
+    pub fn from_name(name: &str) -> Option<CipherType> {
+        match name {
+            "AES-128" => Some(AES_128_CTR),
+            "AES-256" => Some(AES_256_CTR),
+            _ => None,
+        }
+    }
+
     /// Returns the `openssl::crypto::symm::Type` corresponding to this type.
     fn to_openssl(&self) -> ssl_symm::Type {
         match *self {

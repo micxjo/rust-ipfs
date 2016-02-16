@@ -6,3 +6,11 @@ message PublicKey {
 	required KeyType key_type = 1;
 	required bytes bytes = 2;
 }
+
+message Propose {
+	required bytes rand = 1;
+	required bytes public_key = 2;
+	required string exchanges = 3;
+	required string ciphers = 4;
+	required string hashes = 5;
+}

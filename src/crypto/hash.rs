@@ -18,6 +18,15 @@ impl Algorithm {
         ssl_hash::hash(self.to_openssl(), data)
     }
 
+    /// Gets the `Algorithm` for a given IPFS hash name.
+    pub fn from_name(name: &str) -> Option<Algorithm> {
+        match name {
+            "SHA256" => Some(SHA256),
+            "SHA512" => Some(SHA512),
+            _ => None,
+        }
+    }
+
     /// Returns the `openssl::crypto::hash::Type` corresponding to this
     /// algorithm.
     pub fn to_openssl(&self) -> ssl_hash::Type {

@@ -6,3 +6,4 @@ pub mod public_key;
 pub mod symm;
 pub mod ecc;
 pub mod hash;
+pub mod suite;

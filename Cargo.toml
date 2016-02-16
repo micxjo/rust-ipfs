@@ -1,0 +1,16 @@
+[package]
+name = "ipfs"
+description = "An experimental implementation of various IPFS components."
+version = "0.0.1"
+authors = ["Micxjo Funkcio <micxjo@fastmail.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/micxjo/rs-ipfs"
+repository = "https://github.com/micxjo/rs-ipfs"
+keywords = ["networking", "protocol", "web"]
+
+[dependencies]
+clippy = { version = "*", optional = true }
+
+[features]
+default = []

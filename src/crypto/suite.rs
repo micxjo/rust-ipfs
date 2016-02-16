@@ -37,6 +37,14 @@ impl CipherSuite {
     pub fn hash_alg(&self) -> hash::Algorithm {
         self.hash_alg
     }
+
+    /// Returns the length of HMACs.
+    pub fn hmac_length(&self) -> usize {
+        match self.hash_alg {
+            hash::Algorithm::SHA256 => 32,
+            hash::Algorithm::SHA512 => 64,
+        }
+    }
 }
 
 /// Calculates the `order` parameter for use during the secio handshake.

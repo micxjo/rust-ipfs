@@ -14,3 +14,9 @@ message Propose {
 	required string ciphers = 4;
 	required string hashes = 5;
 }
+
+message Exchange {
+        required bytes ephemeral_public_key = 1;
+        required bytes signature = 2;
+}
+

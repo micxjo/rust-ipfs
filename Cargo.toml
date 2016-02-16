@@ -9,7 +9,13 @@ homepage = "https://github.com/micxjo/rs-ipfs"
 repository = "https://github.com/micxjo/rs-ipfs"
 keywords = ["networking", "protocol", "web"]
 
+[[bin]]
+name = "ipfs"
+doc = false
+
 [dependencies]
+byteorder = "^0.4.2"
+rand = "^0.3.14"
 protobuf = "^1.0.18"
 libc = "^0.2.7"
 clippy = { version = "*", optional = true }

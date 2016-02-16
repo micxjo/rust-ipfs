@@ -1,6 +1,7 @@
 //! Cryptographic hash algorithms.
 
 use openssl::crypto::hash as ssl_hash;
+use openssl::crypto::{hmac, memcmp};
 
 /// A hashing algorithm.
 #[allow(missing_docs)]
@@ -34,5 +35,18 @@ impl Algorithm {
             SHA256 => ssl_hash::Type::SHA256,
             SHA512 => ssl_hash::Type::SHA512,
         }
+    }
+
+    /// Calculates the HMAC of the given `key` and `data`.
+    pub fn hmac(&self, key: &[u8], data: &[u8]) -> Vec<u8> {
+        hmac::hmac(self.to_openssl(), key, data)
+    }
+
+    /// Returns true if the HMAC of the key and data is valid.
+    pub fn hmac_check(&self, key: &[u8], data: &[u8], hmac_in: &[u8]) -> bool {
+        // Maybe this should return a Result so that there's a warning
+        // if the result is ignored?
+        let hmac_calc = self.hmac(key, data);
+        memcmp::eq(hmac_in, &hmac_calc[..])
     }
 }

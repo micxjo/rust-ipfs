@@ -4,6 +4,7 @@ use openssl::crypto::hash as ssl_hash;
 
 /// A hashing algorithm.
 #[allow(missing_docs)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum Algorithm {
     SHA256,
     SHA512,

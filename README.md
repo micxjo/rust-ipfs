@@ -1,6 +1,6 @@
-# rs-ipfs
+# rust-ipfs
 
-[![MIT License](https://img.shields.io/github/license/micxjo/rs-ipfs.svg)](https://github.com/micxjo/rs-ipfs/blob/master/LICENSE)
+[![MIT License](https://img.shields.io/github/license/micxjo/rust-ipfs.svg)](https://github.com/micxjo/rust-ipfs/blob/master/LICENSE)
 
 This is an experimental implementation of various [IPFS](https://github.com/ipfs/ipfs)-related components in Rust.
 
@@ -15,4 +15,4 @@ Contributions are welcome!
 
 ## Security
 
-This is an experimental implementation of an experimental protocol. Please do not trust any sensitive data to `rs-ipfs` at this time.
+This is an experimental implementation of an experimental protocol. Please do not trust any sensitive data to `rust-ipfs` at this time.

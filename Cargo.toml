@@ -11,6 +11,7 @@ keywords = ["networking", "protocol", "web"]
 
 [dependencies]
 protobuf = "^1.0.18"
+libc = "^0.2.7"
 clippy = { version = "*", optional = true }
 
 [dependencies.openssl]

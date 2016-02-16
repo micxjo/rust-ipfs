@@ -1,0 +1,8 @@
+enum KeyType {
+	RSA = 0;
+}
+
+message PublicKey {
+	required KeyType key_type = 1;
+	required bytes bytes = 2;
+}

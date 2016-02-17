@@ -9,6 +9,7 @@ extern crate protobuf;
 extern crate byteorder;
 extern crate rand;
 extern crate multiaddr;
+extern crate rust_base58;
 
 pub mod crypto;
 pub mod net;

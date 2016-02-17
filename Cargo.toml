@@ -16,6 +16,7 @@ doc = false
 [dependencies]
 byteorder = "^0.4.2"
 rand = "^0.3.14"
+rust-base58 = "^0.0.4"
 protobuf = "^1.0.18"
 libc = "^0.2.7"
 multiaddr = { git = "https://github.com/micxjo/rust-multiaddr.git" }

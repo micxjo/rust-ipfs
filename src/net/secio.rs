@@ -50,6 +50,7 @@ impl SecureStream<TcpStream> {
 
         if let Some(&Addr::Ipv4(ip4)) = parts.get(0) {
             if let Some(&Addr::Tcp(port)) = parts.get(1) {
+                info!("Dialing {}", addr);
                 let tcp_stream = try!(TcpStream::connect((ip4, port)));
                 return SecureStream::new(tcp_stream, pub_key, check_key_hash);
             }
@@ -114,8 +115,10 @@ impl<T: Read + Write> SecureStream<T> {
         let order = suite::calculate_order(&propose_in, &propose_out);
         let suite = match suite::select_suite(order, &propose_in) {
             None => {
+                info!("Attempted to connect to peer w/o compatible cipher \
+                       suite.");
                 return Err(Error::new(ErrorKind::Other,
-                                      "couldn't agree to cipher suite"))
+                                      "couldn't agree to cipher suite"));
             }
             Some(s) => s,
         };
@@ -171,6 +174,7 @@ impl<T: Read + Write> SecureStream<T> {
         if !remote_pub_key.verify(hash::Algorithm::SHA256,
                                   &selection_in[..],
                                   exchange_in.get_signature()) {
+            warn!("Received invalid signature during secio handshake.");
             return Err(Error::new(ErrorKind::InvalidData, "invalid signature"));
         }
 
@@ -232,7 +236,7 @@ impl<T: Read + Write> SecureStream<T> {
                                   "received bad rand value"));
         }
 
-        println!("Secure handshake complete.");
+        info!("Secio handshake complete.");
         Ok(secure_stream)
     }
 
@@ -248,6 +252,7 @@ impl<T: Read> SecureStream<T> {
         let msg = try!(read_length_prefixed(&mut self.stream));
         let hmac_length = self.cipher_suite.hmac_length();
         if msg.len() < hmac_length {
+            warn!("Received secio message too short to contain a valid HMAC.");
             return Err(Error::new(ErrorKind::InvalidData,
                                   "received message too short to contain an \
                                    HMAC"));
@@ -262,7 +267,7 @@ impl<T: Read> SecureStream<T> {
                 .hmac_check(self.remote_params.stretched_key.hmac_key(),
                             data,
                             hmac) {
-            println!("Invalid HMAC");
+            warn!("Secio message with invalid HMAC received.");
             return Err(Error::new(ErrorKind::InvalidData, "invalid HMAC"));
         }
         Ok(self.remote_params.cipher.update(&data[..]))
@@ -339,6 +344,7 @@ fn read_length_prefixed<T: Read>(r: &mut T) -> io::Result<Vec<u8>> {
 /// the stream.
 fn write_length_prefixed<T: Write>(w: &mut T, data: &[u8]) -> io::Result<()> {
     if data.len() > (u32::MAX as usize) {
+        warn!("Received a length-prefix greater than u32::MAX.");
         return Err(Error::new(ErrorKind::InvalidData, "message too large"));
     }
 

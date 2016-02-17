@@ -4,6 +4,9 @@
 //! An experimental implementation of various
 //! [IPFS](https://github.com/ipfs/ipfs)-related components.
 
+#[macro_use]
+extern crate log;
+
 extern crate openssl;
 extern crate protobuf;
 extern crate byteorder;

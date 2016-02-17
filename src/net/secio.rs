@@ -16,6 +16,7 @@ use proto::{Propose, Exchange};
 use crypto::{hash, suite, public_key, symm};
 use crypto::public_key::PublicKey;
 use crypto::ecc::EphemeralKeyPair;
+use crypto::hash::Multihash;
 use net::multiaddr::{Multiaddr, Addr};
 
 /// A secure stream.
@@ -35,21 +36,42 @@ impl SecureStream<TcpStream> {
                 -> io::Result<SecureStream<TcpStream>> {
         let parts = addr.parts();
 
+        let check_key_hash = match parts.get(2) {
+            None => None,
+            Some(&Addr::Ipfs(ref ipfs)) => {
+                let ipfs = try!(Multihash::from_base58(ipfs));
+                Some(ipfs)
+            }
+            Some(_) => {
+                return Err(Error::new(ErrorKind::InvalidInput,
+                                      "unsupported multiaddr format"))
+            }
+        };
+
         if let Some(&Addr::Ipv4(ip4)) = parts.get(0) {
             if let Some(&Addr::Tcp(port)) = parts.get(1) {
                 let tcp_stream = try!(TcpStream::connect((ip4, port)));
-                return SecureStream::new(tcp_stream, pub_key);
+                return SecureStream::new(tcp_stream, pub_key, check_key_hash);
             }
         }
 
-        Err(Error::new(ErrorKind::Other, "only support IPv4/TCP for now"))
+        Err(Error::new(ErrorKind::InvalidInput,
+                       "only support IPv4/TCP for now"))
     }
 }
 
 impl<T: Read + Write> SecureStream<T> {
     /// Wraps a Reader/Writer and performs a secio handshake, using
-    /// `pub_key` as the local identity.
-    pub fn new(stream: T, pub_key: PublicKey) -> io::Result<SecureStream<T>> {
+    /// `pub_key` as the local identity. If `check_key` is provided, it should
+    /// be a multihash of the other party's public key. Their key will be
+    /// compared with this multihash during the handshake and an error
+    /// returned if they don't match. If `check_key` is None, then no
+    /// key validation will occur.
+    #[cfg_attr(feature="clippy", allow(cyclomatic_complexity))]
+    pub fn new(stream: T,
+               pub_key: PublicKey,
+               check_key: Option<Multihash>)
+               -> io::Result<SecureStream<T>> {
         let mut stream = stream;
 
         // Send Propose.
@@ -68,6 +90,22 @@ impl<T: Read + Write> SecureStream<T> {
         let mut propose_in = Propose::new();
         if let Err(err) = propose_in.merge_from_bytes(&propose_in_buf[..]) {
             return Err(Error::new(ErrorKind::InvalidData, err));
+        }
+
+        // Check key hash.
+        if let Some(check_key) = check_key {
+            // Check the hash of the other side's key. Note: if the hash
+            // matches, the key may still not be valid; a signature
+            // is verified later during the Exchange step which
+            // ensures that we are actually talking to the owner
+            // of the key.
+            let check_other = check_key.algorithm()
+                                       .multihash(propose_in.get_public_key());
+            if check_other != check_key {
+                return Err(Error::new(ErrorKind::InvalidData,
+                                      "the other party's key did not match \
+                                       the provided hash"));
+            }
         }
 
         // Select cipher suite.
@@ -341,5 +379,11 @@ impl From<public_key::Error> for Error {
 impl From<symm::Error> for Error {
     fn from(err: symm::Error) -> Error {
         Error::new(ErrorKind::Other, err)
+    }
+}
+
+impl From<hash::Error> for Error {
+    fn from(err: hash::Error) -> Error {
+        Error::new(ErrorKind::InvalidData, err)
     }
 }

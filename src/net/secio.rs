@@ -48,16 +48,28 @@ impl SecureStream<TcpStream> {
             }
         };
 
-        if let Some(&Addr::Ipv4(ip4)) = parts.get(0) {
-            if let Some(&Addr::Tcp(port)) = parts.get(1) {
-                info!("Dialing {}", addr);
-                let tcp_stream = try!(TcpStream::connect((ip4, port)));
-                return SecureStream::new(tcp_stream, pub_key, check_key_hash);
+        if let Some(&Addr::Tcp(port)) = parts.get(1) {
+            match parts.get(0) {
+                Some(&Addr::Ipv4(ip4)) => {
+                    info!("Dialing {}", addr);
+                    let tcp_stream = try!(TcpStream::connect((ip4, port)));
+                    return SecureStream::new(tcp_stream,
+                                             pub_key,
+                                             check_key_hash);
+                }
+                Some(&Addr::Ipv6(ip6)) => {
+                    info!("Dialing {}", addr);
+                    let tcp_stream = try!(TcpStream::connect((ip6, port)));
+                    return SecureStream::new(tcp_stream,
+                                             pub_key,
+                                             check_key_hash);
+                }
+                _ => {}
             }
         }
 
         Err(Error::new(ErrorKind::InvalidInput,
-                       "only support IPv4/TCP for now"))
+                       "only support IPv4/IPv6 with TCP for now"))
     }
 }
 

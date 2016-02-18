@@ -7,8 +7,8 @@ use ipfs::net::secio::SecureStream;
 use ipfs::net::multiaddr::Multiaddr;
 
 fn main() {
-    let addr = "/ip4/127.0.0.\
-                1/tcp/4001/ipfs/QmTwhzbBFY2gXk3MDCCp6kj26ewNyJxc7GnvHbuxXQf4n4"
+    let addr = "/ip6/::1/tcp/4001/ipfs/QmTwhzbBFY2gXk3MDCCp6kj26ewNyJxc7GnvHbu\
+                xXQf4n4"
                    .parse::<Multiaddr>()
                    .unwrap();
     println!("Testing secio connection to {}", &addr);

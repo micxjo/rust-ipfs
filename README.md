@@ -4,6 +4,8 @@
 
 This is an experimental implementation of various [IPFS](https://github.com/ipfs/ipfs)-related components in Rust.
 
+Currently implemented is the secio secure crypto channel component of libp2p, multiaddr text and binary formats (located in a [separate repository](https://github.com/micxjo/rust-multiaddr)), and basic multihash support. As pieces mature and prove independently useful they may be moved to their own repositories and crates.
+
 ## Contributing
 
 Contributions are welcome!

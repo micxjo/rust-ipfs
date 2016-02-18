@@ -1,5 +1,6 @@
 # rust-ipfs
 
+[![Build Status](https://travis-ci.org/micxjo/rust-ipfs.svg?branch=master)](https://travis-ci.org/micxjo/rust-ipfs)
 [![MIT License](https://img.shields.io/github/license/micxjo/rust-ipfs.svg)](https://github.com/micxjo/rust-ipfs/blob/master/LICENSE)
 
 This is an experimental implementation of various [IPFS](https://github.com/ipfs/ipfs)-related components in Rust.
